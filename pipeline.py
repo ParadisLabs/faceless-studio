@@ -5,6 +5,7 @@ import requests
 
 socket.setdefaulttimeout(120)
 import hub
+from quota import reserve_image
 
 ROOT = Path(__file__).parent
 EPS = ROOT / "episodes"
@@ -276,6 +277,10 @@ def gen_image(prompt, out):
         for attempt in range(1, 4):
             try:
                 print(f"[img] {name} attempt {attempt}/3")
+                if not reserve_image("faceless-studio", f"{out.name}:{name}:{attempt}"):
+                    if _pollinations_image(prompt, out):
+                        return
+                    raise DailyLimitError("quota reservation denied and fallback failed")
                 req = urllib.request.Request(
                     f"https://api.cloudflare.com/client/v4/accounts/{acct}/ai/run/{model}",
                     data=json.dumps(body).encode(),
