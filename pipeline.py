@@ -468,14 +468,14 @@ def cmd_produce(ep_id):
         vf = (f"scale={VIDEO_WIDTH}:{VIDEO_HEIGHT}:force_original_aspect_ratio=increase:flags=lanczos,"
               f"crop={VIDEO_WIDTH}:{VIDEO_HEIGHT},setsar=1,"
               f"zoompan=z='min(zoom+0.0015,1.25)':d={frames}:s={VIDEO_WIDTH}x{VIDEO_HEIGHT}:fps={FPS},"
-              f"drawtext=text='{label}':fontcolor=white:fontsize=34:box=1:"
-              f"boxcolor=black@0.45:boxborderw=10:x=(w-text_w)/2:y=60:fontfile={FONT},"
-              f"drawtext=textfile={capA}:fontfile={FONT}:fontcolor=white:fontsize=46:"
-              f"line_spacing=10:box=1:boxcolor=black@0.55:boxborderw=16:"
-              f"x=(w-text_w)/2:y=h-430:expansion=none:enable='lt(t,{half:.2f})',"
-              f"drawtext=textfile={capB}:fontfile={FONT}:fontcolor=white:fontsize=46:"
-              f"line_spacing=10:box=1:boxcolor=black@0.55:boxborderw=16:"
-              f"x=(w-text_w)/2:y=h-430:expansion=none:enable='gte(t,{half:.2f})'")
+              f"drawtext=text='{label}':fontcolor=white:fontsize=48:box=1:"
+              f"boxcolor=black@0.45:boxborderw=15:x=(w-text_w)/2:y=90:fontfile={FONT},"
+              f"drawtext=textfile={capA}:fontfile={FONT}:fontcolor=white:fontsize=66:"
+              f"line_spacing=14:box=1:boxcolor=black@0.55:boxborderw=24:"
+              f"x=(w-text_w)/2:y=h-645:expansion=none:enable='lt(t,{half:.2f})',"
+              f"drawtext=textfile={capB}:fontfile={FONT}:fontcolor=white:fontsize=66:"
+              f"line_spacing=14:box=1:boxcolor=black@0.55:boxborderw=24:"
+              f"x=(w-text_w)/2:y=h-645:expansion=none:enable='gte(t,{half:.2f})'")
         try:
             sh(["ffmpeg", "-y", "-loop", "1", "-i", imgs / f"L{i}.png", "-i", auds / f"L{i}.mp3",
                 "-vf", vf, "-t", f"{a:.2f}", *encoder_args(FPS),
