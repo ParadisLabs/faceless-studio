@@ -2,6 +2,7 @@
 import argparse, base64, datetime, json, os, random, socket, subprocess, sys, textwrap, time, urllib.parse, urllib.request, urllib.error
 from pathlib import Path
 import requests
+from render_quality import VIDEO_WIDTH, VIDEO_HEIGHT, encoder_args, validate_video
 
 socket.setdefaulttimeout(120)
 import hub
@@ -443,7 +444,13 @@ def cmd_produce(ep_id):
         sf = segs / f"seg{i}.mp4"
         seg_files.append(sf)
         if sf.exists():
-            print(f"[seg] {i} cached"); continue
+            try:
+                validate_video(sf)
+            except Exception as exc:
+                print(f"[seg] {i} cache is outdated or invalid; rebuilding: {exc}")
+                sf.unlink()
+            else:
+                print(f"[seg] {i} cached"); continue
         a = dur(auds / f"L{i}.mp3")
         frames = int(a * FPS) + FPS
         label = "".join(ch for ch in lv["label"] if ch.isalnum() or ch.isspace()) or f"Part {i}"
@@ -458,8 +465,9 @@ def cmd_produce(ep_id):
         capA.write_text(textwrap.fill(" ".join(words[:cut]) or " ", width=22), encoding="utf-8")
         capB.write_text(textwrap.fill(" ".join(words[cut:]) or " ", width=22), encoding="utf-8")
         half = a / 2.0
-        vf = ("scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,"
-              f"zoompan=z='min(zoom+0.0015,1.25)':d={frames}:s=720x1280:fps={FPS},"
+        vf = (f"scale={VIDEO_WIDTH}:{VIDEO_HEIGHT}:force_original_aspect_ratio=increase:flags=lanczos,"
+              f"crop={VIDEO_WIDTH}:{VIDEO_HEIGHT},setsar=1,"
+              f"zoompan=z='min(zoom+0.0015,1.25)':d={frames}:s={VIDEO_WIDTH}x{VIDEO_HEIGHT}:fps={FPS},"
               f"drawtext=text='{label}':fontcolor=white:fontsize=34:box=1:"
               f"boxcolor=black@0.45:boxborderw=10:x=(w-text_w)/2:y=60:fontfile={FONT},"
               f"drawtext=textfile={capA}:fontfile={FONT}:fontcolor=white:fontsize=46:"
@@ -470,8 +478,9 @@ def cmd_produce(ep_id):
               f"x=(w-text_w)/2:y=h-430:expansion=none:enable='gte(t,{half:.2f})'")
         try:
             sh(["ffmpeg", "-y", "-loop", "1", "-i", imgs / f"L{i}.png", "-i", auds / f"L{i}.mp3",
-                "-vf", vf, "-t", f"{a:.2f}", "-r", str(FPS), "-pix_fmt", "yuv420p",
-                "-c:v", "libx264", "-preset", "veryfast", "-c:a", "aac", "-shortest", sf])
+                "-vf", vf, "-t", f"{a:.2f}", *encoder_args(FPS),
+                "-c:a", "aac", "-b:a", "160k", "-shortest", sf])
+            validate_video(sf)
         except Exception:
             if sf.exists():
                 sf.unlink()
@@ -480,7 +489,9 @@ def cmd_produce(ep_id):
     lst = ep / "list.txt"
     lst.write_text("".join(f"file '{s}'\n" for s in seg_files))
     sh(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", lst,
-        "-c", "copy", ep / "video.mp4"])
+        "-c", "copy", "-movflags", "+faststart", ep / "video.mp4"])
+    qa = validate_video(ep / "video.mp4")
+    print(f"[qa] {qa['width']}x{qa['height']} H.264 · {qa['duration']:.1f}s · audio OK")
     meta = {"episode": ep_id, "title": sc["title"], "caption": sc["caption"],
             "hashtags": sc["hashtags"],
             "platforms": {"youtube": "private", "tiktok": "draft"},
