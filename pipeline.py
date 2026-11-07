@@ -6,6 +6,7 @@ from render_quality import VIDEO_WIDTH, VIDEO_HEIGHT, encoder_args, validate_vid
 
 socket.setdefaulttimeout(120)
 import hub
+from quota import reserve_image
 
 ROOT = Path(__file__).parent
 EPS = ROOT / "episodes"
@@ -238,6 +239,30 @@ def llm_json(prompt):
         print(f"[llm] Groq failed: {e} — trying Gemini backup")
     return gemini_json(prompt)
 
+def _pollinations_image(prompt, out):
+    """Best-effort keyless fallback; all studios share the Cloudflare account quota."""
+    try:
+        q = urllib.parse.quote(prompt[:900])
+        url = ("https://image.pollinations.ai/prompt/" + q +
+               "?width=576&height=1024&model=flux&nologo=true&seed=" +
+               str(int(time.time()) % 100000))
+        print("[img] trying keyless Pollinations fallback")
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=180) as r:
+            data = r.read()
+            content_type = r.headers.get("Content-Type", "").lower()
+        valid_magic = (data.startswith(b"\x89PNG\r\n\x1a\n")
+                       or data.startswith(b"\xff\xd8\xff")
+                       or data.startswith(b"RIFF") and data[8:12] == b"WEBP")
+        if len(data) < 10000 or not content_type.startswith("image/") or not valid_magic:
+            raise ValueError("fallback response is not a valid image")
+        out.write_bytes(data)
+        print(f"[img] OK via Pollinations ({len(data)//1024} KB)")
+        return True
+    except Exception as e:
+        print(f"[img] Pollinations fallback failed: {e}")
+        return False
+
 def gen_image(prompt, out):
     acct = os.environ["CLOUDFLARE_ACCOUNT_ID"]
     key = os.environ["CLOUDFLARE_API_TOKEN"]
@@ -249,11 +274,14 @@ def gen_image(prompt, out):
          {"prompt": prompt, "width": 576, "height": 1024}),
     ]
     last = None
-    limit_hits = 0
     for name, model, body in models:
         for attempt in range(1, 4):
             try:
                 print(f"[img] {name} attempt {attempt}/3")
+                if not reserve_image("faceless-studio", f"{out}:{name}:{attempt}"):
+                    if _pollinations_image(prompt, out):
+                        return
+                    raise DailyLimitError("quota reservation denied and fallback failed")
                 req = urllib.request.Request(
                     f"https://api.cloudflare.com/client/v4/accounts/{acct}/ai/run/{model}",
                     data=json.dumps(body).encode(),
@@ -274,14 +302,11 @@ def gen_image(prompt, out):
             except urllib.error.HTTPError as e:
                 last = f"HTTP {e.code}: {e.read().decode()[:200]}"
                 print(f"[img] {name} attempt {attempt}: {last}")
-                low = last.lower()
-                is_daily = (e.code == 402 or
-                            (e.code == 429 and any(k in low for k in ("daily", "limit", "quota", "neuron"))))
-                if is_daily:
-                    limit_hits += 1
-                    if limit_hits >= 2:
-                        raise DailyLimitError(f"Cloudflare free daily limit reached. Last: {last[:150]}")
-                elif e.code in (401, 403, 404):
+                if e.code in (402, 429):
+                    if _pollinations_image(prompt, out):
+                        return
+                    raise DailyLimitError(f"Cloudflare quota/rate limit; fallback unavailable: {last[:150]}") from e
+                if e.code in (401, 403, 404):
                     break
                 if attempt < 3:
                     time.sleep(5)
@@ -293,6 +318,8 @@ def gen_image(prompt, out):
             finally:
                 if out.exists() and out.stat().st_size <= 10000:
                     out.unlink()
+    if _pollinations_image(prompt, out):
+        return
     raise RuntimeError(f"image generation failed for {out.name}. Last: {last}")
 
 def load_state():

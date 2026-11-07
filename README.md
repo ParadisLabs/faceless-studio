@@ -30,3 +30,7 @@ curl -X POST https://api.github.com/repos/<owner>/<repo>/dispatches \
   -H "Accept: application/vnd.github+json" \
   -d '{"event_type":"opshub.produce","client_payload":{"topic":"","new_series":false,"reason":"opshub nightly"}}'
 ```
+
+## Shared image quota
+
+Cloudflare image calls are admitted through OpsHub's signed `/ai-usage/reserve` endpoint. The shared UTC-day limits are 24 calls total and 10 per studio. The ledger counts requests, not Cloudflare neurons, and does not account for other workloads on the same Cloudflare account. If the ledger is missing, unavailable, or at its cap, the studio skips Cloudflare and uses its keyless Pollinations fallback. The existing `HUB_URL` and `HUB_WEBHOOK_SECRET` Actions secrets are required. Deploy the OpsHub PR before merging/enabling this studio change; no new secret is introduced.
