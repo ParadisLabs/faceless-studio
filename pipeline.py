@@ -583,6 +583,7 @@ if __name__ == "__main__":
     if a.topic:
         print(f"[pipeline] brief from {hub.why()}: {a.topic}")
     try:
+        raise RuntimeError("TrendScope production is intentionally paused: the legacy fictional story generator is not an editorial research engine. A validated trend dossier and dedicated factual script/render path are required before production can resume.")
         {"write": lambda: cmd_write(a.episode, a.topic),
          "produce": lambda: cmd_produce(a.episode),
          "notify": lambda: cmd_notify(a.episode)}[a.cmd]()
