@@ -1,4 +1,7 @@
-# faceless-studio
+# TrendScope
+
+Bilingual editorial studio covering technology, internet culture, AI, viral stories and digital business. English and Turkish editions; researched Shorts and long-form explainers.
+
 ## OpsHub
 
 One shared module, `hub.py`, feeds and is triggered by OpsHub in every studio.
