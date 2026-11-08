@@ -1,6 +1,6 @@
 # TrendScope
 
-English-language editorial studio covering technology, internet culture, AI, viral stories and digital business. IMPORTANT: the current pipeline is still the legacy fictional 7-level story generator; trend research, source verification, timely story selection, and dedicated long-form explainer writing have NOT yet been implemented. Turkish localization is deferred. Production remains disabled until the editorial engine is replaced and tested.
+English-language editorial studio covering technology, internet culture, AI, viral stories and digital business. IMPORTANT: the current pipeline is still the legacy fictional 7-level story generator; trend research, source verification, timely story selection, and dedicated long-form explainer writing have NOT yet been implemented. Turkish localization is deferred. A fail-closed CLI guard now blocks write, render, and delivery even if the Actions production variable is accidentally enabled. A trend dossier validator and offline tests are in place, but discovery, source retrieval, factual script generation, and a dedicated render path are still not implemented. Do not enable production until those components pass review.
 
 ## OpsHub
 
