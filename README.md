@@ -1,6 +1,6 @@
 # TrendScope
 
-Bilingual editorial studio covering technology, internet culture, AI, viral stories and digital business. English and Turkish editions; researched Shorts and long-form explainers.
+English-language editorial studio covering technology, internet culture, AI, viral stories and digital business. IMPORTANT: the current pipeline is still the legacy fictional 7-level story generator; trend research, source verification, timely story selection, and dedicated long-form explainer writing have NOT yet been implemented. Turkish localization is deferred. Production remains disabled until the editorial engine is replaced and tested.
 
 ## OpsHub
 
