@@ -1,0 +1,27 @@
+version: 1
+brand: trendscope
+character_id: trendscope_host
+visual_identity:
+  style: "clean modern 2D editorial animation; crisp linework; restrained navy, cream and teal palette"
+  silhouette: "young adult male host; navy varsity-style jacket over cream hoodie; dark trousers; sneakers"
+  signature: "round dark glasses; short dark hair; small TrendScope chest mark"
+  face: "friendly expressive face; preserve eye spacing, glasses geometry and jaw proportions"
+personality: [curious, charismatic, intelligent, slightly_witty]
+poses_required: [front, three_quarter, side, back, standing, seated, presenting, pointing, holding_phone]
+expressions_required: [talking, smirking, surprised, thoughtful, skeptical, excited]
+animation_contract:
+  preserve_model_proportions: true
+  use_reference_sheet_for_every_scene: true
+  mouth_shapes: [rest, A, E, O, M, F, L]
+  hand_pose_library: true
+  no_photorealistic_character_reinterpretation: true
+language_editions:
+  en: {voice_locale: "en", script: independently_written}
+  tr: {voice_locale: "tr-TR", script: independently_written}
+asset_paths:
+  model_sheet: "assets/characters/trendscope/model-sheet.png"
+  expressions: "assets/characters/trendscope/expressions/"
+  mouth_shapes: "assets/characters/trendscope/mouth/"
+  poses: "assets/characters/trendscope/poses/"
+  transparent_renders: "assets/characters/trendscope/renders/"
+rights: "Use only studio-owned or explicitly commercially licensed character assets."
