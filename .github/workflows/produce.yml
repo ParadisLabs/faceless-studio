@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Compile pipeline and hub modules
-        run: python -m py_compile pipeline.py hub.py quota.py tests/test_quota.py && python -m unittest discover -s tests -v
+        run: python -m py_compile pipeline.py hub.py quota.py trend_research.py tests/*.py && python -m unittest discover -s tests -v
 
   produce:
     # Production stays OFF until the owner explicitly sets PRODUCTION_ENABLED=true.
